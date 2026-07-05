@@ -120,6 +120,7 @@ async def chat_query(request: QueryRequest):
         )
 
         response = rag_chain.invoke(request.question)
+        print("the response from llm is ", response)
         return {"response": response}
 
     except Exception as e:
