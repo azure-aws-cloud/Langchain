@@ -52,3 +52,13 @@ streamlit run weather_rag_vectordb_ui.py
 ![img_3.png](img_3.png)
 
 ![img_4.png](img_4.png)
+
+## Run the plm bot (backend)
+```
+python plmbot.py
+```
+
+## Run the plm bot UI
+```
+ streamlit run plmbotui.py
+```
