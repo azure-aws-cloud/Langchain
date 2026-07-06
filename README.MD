@@ -39,3 +39,16 @@ What are the guidelines for Paris
 What is the weather in berlin 
 ```
 ![img_2.png](img_2.png)
+
+# BOT exposed on REST API and UI on another app
+## Run the bot
+```
+python .\weather_rag_vectordb_rest_api.py 
+```
+## Run the ui
+```
+streamlit run weather_rag_vectordb_ui.py
+```
+![img_3.png](img_3.png)
+
+![img_4.png](img_4.png)
