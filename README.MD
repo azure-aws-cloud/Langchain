@@ -20,3 +20,22 @@ streamlit run weather.py
 ```
 # Response should be like 
 ![img.png](img.png)
+
+# Ask the weather bot (RAG + Vector DB + Tool APIs)
+## Flow -> If the Gemini LLM can find relevant info in the knowledgebase, return it back to the user
+## Else , make the tool call that will get weather info.
+## Ask for guidelines for Paris travel and it will find it out from the existing knowledge base
+## Ask for the weather in paris, it will make tool call, that will make the weather api call to get weather info
+## Run the bot 
+```
+ streamlit run weather_rag_vectordb
+```
+```
+What are the guidelines for Paris 
+```
+![img_1.png](img_1.png)
+
+```
+What is the weather in berlin 
+```
+![img_2.png](img_2.png)
