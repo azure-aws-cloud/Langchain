@@ -17,4 +17,10 @@ uvicorn
 streamlit
 pyjwt
 extra-streamlit-components
+tavily-python
+black
+isort
+langchain-google-vertexai
 
+
+langsmith
