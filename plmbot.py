@@ -71,7 +71,7 @@ def initialize_chroma_db():
     CHROMA_STORE = Chroma.from_texts(
         texts=chunks,
         embedding=embeddings,
-        collection_name="travel_guidelines"
+        collection_name="plm_kb"
     )
     print("📡 [Backend Boot] PLM Knowledgebase built successfully.")
 
@@ -97,7 +97,18 @@ def health_check():
         "api_key_loaded": api_key is not None
     }
 
-
+@tool
+def search_plm_kb(query: str) -> str:
+    """Search internal unstructured document manual guides for plm,
+    change request review (ecr) , initial review and triage, impact analysis
+    change order formalization (eco), design and validatino , change control board
+    (ccb) approval , implementation and release."""
+    if CHROMA_STORE is None:
+        return "Error: Vector store is not ready."
+    search_results = CHROMA_STORE.similarity_search(query, k=2)
+    print(search_results)
+    retrieved_context = "\n".join([doc.page_content for doc in search_results])
+    return f"Retrieved Context from internal guidelines:\n{retrieved_context}"
 # 2. Define Core LLM Tools
 @tool
 def transfer_ownership(plm_object:str,from_owner:str, to_owner:str, ) -> str:
@@ -141,7 +152,7 @@ def handle_chat_query(request: QueryRequest):
     steps_taken = []
     try:
         llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=api_key, temperature=0)
-        tools_list = [transfer_ownership, unlock_object]
+        tools_list = [transfer_ownership, unlock_object,search_plm_kb]
         llm_with_tools = llm.bind_tools(tools_list)
 
         steps_taken.append("🧠 Querying Gemini model for intent...")
@@ -160,6 +171,8 @@ def handle_chat_query(request: QueryRequest):
                     tool_output = transfer_ownership.invoke(tool_args)
                 elif tool_name == "unlock_object":
                     tool_output = unlock_object.invoke(tool_args)
+                elif tool_name == "search_plm_kb":
+                    tool_output = search_plm_kb.invoke(tool_args)
                 else:
                     tool_output = "Error: Unrecognised tool mapping structure call."
 
