@@ -14,9 +14,11 @@ TOKEN_EXPIRE_MINUTES = 15  # Tokens expire quickly for security
 
 USER_DATA = {"admin": "123"}
 
+
 class LoginRequest(BaseModel):
     username: str
     password: str
+
 
 # Helper: Create Token
 def create_access_token(data: dict):
@@ -26,6 +28,7 @@ def create_access_token(data: dict):
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
+
 # 1. Login & Issue JWT
 @app.post("/login")
 def login(data: LoginRequest):
@@ -33,6 +36,7 @@ def login(data: LoginRequest):
         token = create_access_token(data={"sub": data.username})
         return {"access_token": token, "token_type": "bearer"}
     raise HTTPException(status_code=400, detail="Incorrect username or password")
+
 
 # 2. Decode & Validate JWT
 def verify_jwt_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -52,6 +56,7 @@ def verify_jwt_token(credentials: HTTPAuthorizationCredentials = Depends(securit
             detail="Invalid security token",
         )
 
+
 # 3. Secure Endpoint
 @app.get("/protected-data")
 def get_protected_data(token_payload: dict = Depends(verify_jwt_token)):
@@ -59,5 +64,5 @@ def get_protected_data(token_payload: dict = Depends(verify_jwt_token)):
         "status": "authorized",
         "user": token_payload.get("sub"),
         "expires_at_epoch": token_payload.get("exp"),
-        "payload": "Here is your highly classified data."
+        "payload": "Here is your highly classified data.",
     }

@@ -47,13 +47,15 @@ def get_current_weather(location: str) -> str:
 
         # If the API returns no results array or it's empty
         if not results_list or len(results_list) == 0:
-            print(f"⚠️ [Tool] No coordinates found for location target: '{location_cleaned}'")
+            print(
+                f"⚠️ [Tool] No coordinates found for location target: '{location_cleaned}'"
+            )
             return f"Could not find coordinates for {location_cleaned}."
 
         # Access index 0 since results is a list of matching cities
         first_match = results_list[0]
-        lat = first_match.get("latitude") # 48.8534
-        lon = first_match.get("longitude") # 2.3488
+        lat = first_match.get("latitude")  # 48.8534
+        lon = first_match.get("longitude")  # 2.3488
         print(f"🎯 [Tool] Found Coordinates: Latitude={lat}, Longitude={lon}")
 
         # ✅ FIXED BOTH PATH & PARAMETERS: Correct domain, added explicit 'latitude=' query key string
@@ -65,7 +67,7 @@ def get_current_weather(location: str) -> str:
         weather_res = requests.get(weather_url, timeout=30)
         print(f"Results from Weather API is  ", weather_res)
         weather_data = weather_res.json()
-        print(f"Results from Weather API in JSON   " , weather_data)
+        print(f"Results from Weather API in JSON   ", weather_data)
         current = weather_data.get("current_weather", {})
 
         temp = current.get("temperature", "unknown")
@@ -100,9 +102,7 @@ with st.sidebar:
 # 3. Main Logic Execution Loop
 if api_key:
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
-        google_api_key=api_key,
-        temperature=0
+        model="gemini-2.5-flash", google_api_key=api_key, temperature=0
     )
 
     tools = [get_current_weather]
@@ -110,7 +110,7 @@ if api_key:
 
     user_query = st.text_input(
         "What would you like to know?",
-        placeholder="e.g., What is the weather like in Paris right now?"
+        placeholder="e.g., What is the weather like in Paris right now?",
     )
 
     if user_query:
@@ -123,24 +123,36 @@ if api_key:
             response = llm_with_tools.invoke(user_query)
 
             if response.tool_calls:
-                print(f"🤖 [Model Response] Gemini triggered tool calls: {response.tool_calls}")
+                print(
+                    f"🤖 [Model Response] Gemini triggered tool calls: {response.tool_calls}"
+                )
                 for tool_call in response.tool_calls:
                     city = tool_call["args"].get("location")
 
-                    print(f"🌐 [Processing] step 2: Executing weather tool code for: '{city}'...")
-                    status_box.info(f"🌐 step 2: Calling Weather API Tool for '{city}'...")
+                    print(
+                        f"🌐 [Processing] step 2: Executing weather tool code for: '{city}'..."
+                    )
+                    status_box.info(
+                        f"🌐 step 2: Calling Weather API Tool for '{city}'..."
+                    )
                     tool_output = get_current_weather.invoke(tool_call["args"])
 
                     print("📝 [Processing] step 3: Constructing message context...")
-                    status_box.info("📝 step 3: Compiling structured message history for summary...")
+                    status_box.info(
+                        "📝 step 3: Compiling structured message history for summary..."
+                    )
 
                     conversation_history = [
                         HumanMessage(content=user_query),
                         AIMessage(content="", tool_calls=response.tool_calls),
-                        ToolMessage(content=str(tool_output), tool_call_id=tool_call["id"])
+                        ToolMessage(
+                            content=str(tool_output), tool_call_id=tool_call["id"]
+                        ),
                     ]
 
-                    print("🧠 [Processing] Requesting final user-friendly summary from Gemini...")
+                    print(
+                        "🧠 [Processing] Requesting final user-friendly summary from Gemini..."
+                    )
                     final_response = llm.invoke(conversation_history)
 
                     print(f"✨ [Final Response] Process completed successfully.")
@@ -148,7 +160,9 @@ if api_key:
                     st.subheader("☀️ Response:")
                     st.write(final_response.content)
             else:
-                print("🤖 [Model Response] Gemini answered directly without needing the weather tool.")
+                print(
+                    "🤖 [Model Response] Gemini answered directly without needing the weather tool."
+                )
                 status_box.empty()
                 st.subheader("☀️ Response:")
                 st.write(response.content)

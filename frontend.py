@@ -46,8 +46,7 @@ if not st.session_state["token"]:
 
     if st.button("Log In"):
         response = requests.post(
-            f"{FASTAPI_URL}/login",
-            json={"username": username, "password": password}
+            f"{FASTAPI_URL}/login", json={"username": username, "password": password}
         )
         if response.status_code == 200:
             token = response.json().get("access_token")

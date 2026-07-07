@@ -66,12 +66,12 @@ def initialize_chroma_db():
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=40)
     chunks = text_splitter.split_text(md_text)
 
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001", google_api_key=api_key)
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model="models/gemini-embedding-001", google_api_key=api_key
+    )
 
     CHROMA_STORE = Chroma.from_texts(
-        texts=chunks,
-        embedding=embeddings,
-        collection_name="plm_kb"
+        texts=chunks, embedding=embeddings, collection_name="plm_kb"
     )
     print("📡 [Backend Boot] PLM Knowledgebase built successfully.")
 
@@ -94,8 +94,9 @@ def health_check():
     return {
         "status": status_code,
         "database_connected": is_database_ready,
-        "api_key_loaded": api_key is not None
+        "api_key_loaded": api_key is not None,
     }
+
 
 @tool
 def search_plm_kb(query: str) -> str:
@@ -109,9 +110,15 @@ def search_plm_kb(query: str) -> str:
     print(search_results)
     retrieved_context = "\n".join([doc.page_content for doc in search_results])
     return f"Retrieved Context from internal guidelines:\n{retrieved_context}"
+
+
 # 2. Define Core LLM Tools
 @tool
-def transfer_ownership(plm_object:str,from_owner:str, to_owner:str, ) -> str:
+def transfer_ownership(
+    plm_object: str,
+    from_owner: str,
+    to_owner: str,
+) -> str:
     """Transfer ownership of plm_object from one owner to another
     Example  : Transfer ownership of Engineering Change Action Axle 1.9 from rhushikesh to rahul
     """
@@ -127,7 +134,7 @@ def transfer_ownership(plm_object:str,from_owner:str, to_owner:str, ) -> str:
 
 @tool
 def unlock_object(plm_object: str) -> str:
-    """ Unlock business object
+    """Unlock business object
     Example : Unlock Engineering Change Action Axle 1.9
     """
     try:
@@ -151,21 +158,28 @@ class QueryResponse(BaseModel):
 def handle_chat_query(request: QueryRequest):
     steps_taken = []
     try:
-        llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=api_key, temperature=0)
-        tools_list = [transfer_ownership, unlock_object,search_plm_kb]
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.5-flash", google_api_key=api_key, temperature=0
+        )
+        tools_list = [transfer_ownership, unlock_object, search_plm_kb]
         llm_with_tools = llm.bind_tools(tools_list)
 
         steps_taken.append("🧠 Querying Gemini model for intent...")
         initial_response = llm_with_tools.invoke(request.query)
 
         if initial_response.tool_calls:
-            conversation_history = [HumanMessage(content=request.query), initial_response]
+            conversation_history = [
+                HumanMessage(content=request.query),
+                initial_response,
+            ]
 
             for tool_call in initial_response.tool_calls:
                 tool_name = tool_call["name"]
                 tool_args = tool_call["args"]
 
-                steps_taken.append(f"⚙️ Running Tool: `{tool_name}` for context arguments -> {tool_args}")
+                steps_taken.append(
+                    f"⚙️ Running Tool: `{tool_name}` for context arguments -> {tool_args}"
+                )
 
                 if tool_name == "transfer_ownership":
                     tool_output = transfer_ownership.invoke(tool_args)
@@ -180,11 +194,15 @@ def handle_chat_query(request: QueryRequest):
                     ToolMessage(content=str(tool_output), tool_call_id=tool_call["id"])
                 )
 
-            steps_taken.append("📝 Blending tool payload histories for unified agent response...")
+            steps_taken.append(
+                "📝 Blending tool payload histories for unified agent response..."
+            )
             final_response = llm.invoke(conversation_history)
             return QueryResponse(response=final_response.content, steps=steps_taken)
         else:
-            steps_taken.append("🤖 Gemini responded directly without requiring external tool routing paths.")
+            steps_taken.append(
+                "🤖 Gemini responded directly without requiring external tool routing paths."
+            )
             return QueryResponse(response=initial_response.content, steps=steps_taken)
 
     except Exception as e:

@@ -16,7 +16,9 @@ load_dotenv()
 # Web Application UI Layout Configurations
 st.set_page_config(page_title="Persistent Gemini RAG", page_icon="💾", layout="wide")
 st.title("💾 On-Premise Persistent Gemini RAG Explorer")
-st.subheader("Keep your indexed documents safely stored on-premise across application restarts.")
+st.subheader(
+    "Keep your indexed documents safely stored on-premise across application restarts."
+)
 
 DB_DIR = "./chroma_db"
 COLLECTION_NAME = "gemini_knowledge_base"
@@ -24,11 +26,11 @@ COLLECTION_NAME = "gemini_knowledge_base"
 
 # --- RAG Core Functions ---
 
+
 def get_embeddings_model():
     """Initializes the active, production-ready Gemini embedding model."""
     return GoogleGenerativeAIEmbeddings(
-        model="models/gemini-embedding-001",
-        task_type="retrieval_document"
+        model="models/gemini-embedding-001", task_type="retrieval_document"
     )
 
 
@@ -48,7 +50,7 @@ def get_vectorstore_instance():
     vector_store = Chroma(
         client=persistent_client,
         collection_name=COLLECTION_NAME,
-        embedding_function=embeddings
+        embedding_function=embeddings,
     )
     return vector_store
 
@@ -73,12 +75,19 @@ if "retriever" not in st.session_state:
             vector_store = get_vectorstore_instance()
             # Verify if documents exist in the persistent collection layer
             if vector_store._collection.count() > 0:
-                st.session_state.retriever = vector_store.as_retriever(search_kwargs={"k": 2})
-                st.toast("🎉 Detected existing database on disk! Pre-loaded successfully.", icon="💾")
+                st.session_state.retriever = vector_store.as_retriever(
+                    search_kwargs={"k": 2}
+                )
+                st.toast(
+                    "🎉 Detected existing database on disk! Pre-loaded successfully.",
+                    icon="💾",
+                )
             else:
                 st.session_state.retriever = None
         except Exception as startup_err:
-            st.error(f"Failed to auto-load index. Wiping corrupted metadata may be required: {startup_err}")
+            st.error(
+                f"Failed to auto-load index. Wiping corrupted metadata may be required: {startup_err}"
+            )
             st.session_state.retriever = None
     else:
         st.session_state.retriever = None
@@ -101,14 +110,19 @@ with st.sidebar:
     uploaded_file = st.file_uploader(
         "Append text materials to local disk storage:",
         type=["txt", "md", "log"],
-        help="Upload new reference files to store inside your on-premise vector database."
+        help="Upload new reference files to store inside your on-premise vector database.",
     )
 
     if uploaded_file is not None:
-        if "last_uploaded" not in st.session_state or st.session_state.last_uploaded != uploaded_file.name:
+        if (
+            "last_uploaded" not in st.session_state
+            or st.session_state.last_uploaded != uploaded_file.name
+        ):
             with st.spinner("Chunking text layout and updating disk index..."):
                 raw_context = uploaded_file.read().decode("utf-8")
-                st.session_state.retriever = process_text_into_persistent_store(raw_context)
+                st.session_state.retriever = process_text_into_persistent_store(
+                    raw_context
+                )
                 st.session_state.last_uploaded = uploaded_file.name
                 st.rerun()
 
@@ -135,7 +149,8 @@ with st.sidebar:
 # Primary Interactive Conversation Space
 if st.session_state.retriever is None:
     st.info(
-        "ℹ️ **Database Empty:** Please drag and drop a reference text file into the sidebar to establish your local database on-premise.")
+        "ℹ️ **Database Empty:** Please drag and drop a reference text file into the sidebar to establish your local database on-premise."
+    )
 else:
     # Render historical conversation components
     for message in st.session_state.messages:
@@ -143,7 +158,9 @@ else:
             st.markdown(message["content"])
 
     # Handle incoming user query lines
-    if user_query := st.chat_input("Ask a question anchored to your local disk databases..."):
+    if user_query := st.chat_input(
+        "Ask a question anchored to your local disk databases..."
+    ):
         st.session_state.messages.append({"role": "user", "content": user_query})
         with st.chat_message("user"):
             st.markdown(user_query)
@@ -152,26 +169,38 @@ else:
         with st.chat_message("assistant"):
             with st.spinner("Searching on-premise data chunks..."):
                 try:
-                    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.1)
+                    llm = ChatGoogleGenerativeAI(
+                        model="gemini-2.5-flash", temperature=0.1
+                    )
 
-                    rag_prompt = ChatPromptTemplate.from_messages([
-                        ("system", "Answer the user's question using ONLY the provided context snippets. "
-                                   "If the answer cannot be confidently formulated from the context, "
-                                   "respond with 'I cannot find that information in the provided source materials.'\n\n"
-                                   "Context:\n{context}"),
-                        ("user", "{input}")
-                    ])
+                    rag_prompt = ChatPromptTemplate.from_messages(
+                        [
+                            (
+                                "system",
+                                "Answer the user's question using ONLY the provided context snippets. "
+                                "If the answer cannot be confidently formulated from the context, "
+                                "respond with 'I cannot find that information in the provided source materials.'\n\n"
+                                "Context:\n{context}",
+                            ),
+                            ("user", "{input}"),
+                        ]
+                    )
 
                     rag_chain = (
-                            {"context": st.session_state.retriever | format_docs, "input": RunnablePassthrough()}
-                            | rag_prompt
-                            | llm
-                            | StrOutputParser()
+                        {
+                            "context": st.session_state.retriever | format_docs,
+                            "input": RunnablePassthrough(),
+                        }
+                        | rag_prompt
+                        | llm
+                        | StrOutputParser()
                     )
 
                     response_output = rag_chain.invoke(user_query)
                     st.markdown(response_output)
-                    st.session_state.messages.append({"role": "assistant", "content": response_output})
+                    st.session_state.messages.append(
+                        {"role": "assistant", "content": response_output}
+                    )
 
                 except Exception as error_exception:
                     st.error(f"Execution Error: {str(error_exception)}")

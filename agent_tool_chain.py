@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 from langchain_core.tools import tool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.agents import create_agent
+
 # Modern location for the Google Search utility
 from langchain_google_community import GoogleSearchAPIWrapper
 from langchain_community.callbacks import StreamlitCallbackHandler
@@ -36,7 +37,7 @@ tools = [google_search, calculate_multiplier]
 # --- 4. Main Application Logic ---
 user_query = st.text_input(
     "Enter your query:",
-    placeholder="e.g., Find the stock price of Alphabet (GOOGL) today and multiply it by 1.5."
+    placeholder="e.g., Find the stock price of Alphabet (GOOGL) today and multiply it by 1.5.",
 )
 
 if st.button("Run Agent"):
@@ -51,15 +52,19 @@ if st.button("Run Agent"):
             agent_executor = create_agent(model=llm, tools=tools)
 
             # Create a UI container for execution logs
-            with st.status("Gemini is thinking and executing tools...", expanded=True) as status:
+            with st.status(
+                "Gemini is thinking and executing tools...", expanded=True
+            ) as status:
                 st_callback = StreamlitCallbackHandler(st.container())
 
                 # Execute using standard message array formatting
                 response = agent_executor.invoke(
                     {"messages": [{"role": "user", "content": user_query}]},
-                    {"callbacks": [st_callback]}
+                    {"callbacks": [st_callback]},
                 )
-                status.update(label="Execution complete!", state="complete", expanded=False)
+                status.update(
+                    label="Execution complete!", state="complete", expanded=False
+                )
 
             # Display final answer (Modern response object holds data in a messages array)
             st.subheader("Final Output:")

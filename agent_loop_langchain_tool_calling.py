@@ -5,7 +5,7 @@ load_dotenv()
 
 from langchain.chat_models import init_chat_model
 from langchain.tools import tool
-from langchain_core.messages import HumanMessage,SystemMessage,ToolMessage
+from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
 
 from langsmith import traceable
 
@@ -14,30 +14,33 @@ MODEL = "gemini-2.5-flash"
 
 # ----- Tools (Langchain @tool decorator)
 
-@tool
-def get_product_price(product:str)->float:
-    """ Look up the price of a product in the catalog """
-    print(f"  >> Executing get_product_price for (product='{product}')")
-    prices = {"laptop": 1299.99, "headphones": 149.95,"keyboard":89.50}
-    return prices.get(product,0)
 
 @tool
-def apply_discount(price:float, discount_tier: str)->float:
-    """ Apply a discount tier to a price and return the final price.
-    Available tiers: bronze, silver, gold. """
+def get_product_price(product: str) -> float:
+    """Look up the price of a product in the catalog"""
+    print(f"  >> Executing get_product_price for (product='{product}')")
+    prices = {"laptop": 1299.99, "headphones": 149.95, "keyboard": 89.50}
+    return prices.get(product, 0)
+
+
+@tool
+def apply_discount(price: float, discount_tier: str) -> float:
+    """Apply a discount tier to a price and return the final price.
+    Available tiers: bronze, silver, gold."""
     print(f"  >> Executing apply_discount for (prices={price})")
-    discount_percentages = {"bronze":5,"silver":10,"gold":23}
-    discount = discount_percentages.get(discount_tier,0)
+    discount_percentages = {"bronze": 5, "silver": 10, "gold": 23}
+    discount = discount_percentages.get(discount_tier, 0)
     print(f"The discount is {discount}")
-    price = round(price*(1-discount/100),2)
+    price = round(price * (1 - discount / 100), 2)
     print(f"The discounted price is {price}")
     return price
+
 
 @traceable(name="LangChain Agent Loop")
 def run_agent(question: str):
     tools = [get_product_price, apply_discount]
     tools_dict = {t.name: t for t in tools}
-    llm = init_chat_model(f"google_genai:{MODEL}",temperature=0.3)
+    llm = init_chat_model(f"google_genai:{MODEL}", temperature=0.3)
     # llm = init_chat_model(f"openai:gpt-5", temperature=0.3)
     llm_with_tools = llm.bind_tools(tools)
     print(f"Question: {question}")
@@ -61,10 +64,10 @@ def run_agent(question: str):
                 "ask them which tier to use - do NOT assume one"
             )
         ),
-        HumanMessage(content=question)
+        HumanMessage(content=question),
     ]
 
-    for iteration in range(1,MAX_ITERATIONS+1):
+    for iteration in range(1, MAX_ITERATIONS + 1):
         print(f"\n --- Iteration {iteration} ---")
 
         ai_message = llm_with_tools.invoke(messages)
@@ -94,7 +97,9 @@ def run_agent(question: str):
 
         # Feedback loop to tell the AI that use the feedback from your iteration history and avoid excessive iterations
         messages.append(ai_message)
-        messages.append(ToolMessage(content=str(observation),tool_call_id=tool_call_id))
+        messages.append(
+            ToolMessage(content=str(observation), tool_call_id=tool_call_id)
+        )
     print("ERROR : Max iterations reached without a final answer")
     return None
 

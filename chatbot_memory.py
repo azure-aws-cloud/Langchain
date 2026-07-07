@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+
 # FIX: Core native module replaces the legacy community setup
 from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
@@ -15,11 +16,13 @@ def run_memory_tutorial():
     # Initialize the modern production model
     llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
 
-    chat_prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are a friendly AI companion."),
-        MessagesPlaceholder(variable_name="history"),
-        ("user", "{input}")
-    ])
+    chat_prompt = ChatPromptTemplate.from_messages(
+        [
+            ("system", "You are a friendly AI companion."),
+            MessagesPlaceholder(variable_name="history"),
+            ("user", "{input}"),
+        ]
+    )
 
     chain = chat_prompt | llm
     session_store = {}
@@ -34,7 +37,7 @@ def run_memory_tutorial():
         chain,
         get_session_history,
         input_messages_key="input",
-        history_messages_key="history"
+        history_messages_key="history",
     )
 
     user_config = {"configurable": {"session_id": "user_session_789"}}

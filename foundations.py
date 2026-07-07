@@ -11,15 +11,12 @@ def run_foundations_tutorial():
     print("--- Running Tutorial 1: Foundations ---")
 
     # Initialize Gemini model (requires GOOGLE_API_KEY in environment)
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
-        temperature=0.7
-    )
+    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
 
     # Structure system and user instructions
     messages = [
         SystemMessage(content="You are a helpful data science assistant."),
-        HumanMessage(content="Explain overfitting in one sentence.")
+        HumanMessage(content="Explain overfitting in one sentence."),
     ]
 
     # Request completion

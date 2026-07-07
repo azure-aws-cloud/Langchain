@@ -39,7 +39,9 @@ MD_FILE_PATH = "knowledge_base.md"
 def ensure_markdown_file():
     """Writes the knowledge base to a .md file if it does not exist."""
     if not os.path.exists(MD_FILE_PATH):
-        print(f"📝 [File IO] '{MD_FILE_PATH}' not found. Generating default knowledge base...")
+        print(
+            f"📝 [File IO] '{MD_FILE_PATH}' not found. Generating default knowledge base..."
+        )
         markdown_content = """# Global Travel Guidelines & Advisories
 
 ## Paris Travel Manual
@@ -74,14 +76,14 @@ def initialize_chroma_db():
 
     # Initialize native Google embeddings
     print("🧠 [RAG Setup] Generating vector embeddings via Google Embeddings...")
-    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001", google_api_key=api_key)
+    embeddings = GoogleGenerativeAIEmbeddings(
+        model="models/gemini-embedding-001", google_api_key=api_key
+    )
 
     # Instantiate vector store directly from langchain_chroma
     print("💎 [RAG Setup] Indexing chunks inside Chroma DB collection...")
     chroma_store = Chroma.from_texts(
-        texts=chunks,
-        embedding=embeddings,
-        collection_name="travel_guidelines"
+        texts=chunks, embedding=embeddings, collection_name="travel_guidelines"
     )
     print("✅ [RAG Setup] Chroma Vector Database built successfully.")
     return chroma_store
@@ -137,7 +139,9 @@ def search_local_travel_guidelines(query: str) -> str:
     search_results = db.similarity_search(query, k=2)
 
     retrieved_context = "\n".join([doc.page_content for doc in search_results])
-    print(f"📦 [RAG Tool] Relevant matching text extracted from Chroma:\n{retrieved_context}")
+    print(
+        f"📦 [RAG Tool] Relevant matching text extracted from Chroma:\n{retrieved_context}"
+    )
     return f"Retrieved Context from internal guidelines:\n{retrieved_context}"
 
 
@@ -156,9 +160,7 @@ if api_key:
 
     # Initialize Gemini 2.5 Flash LLM
     llm = ChatGoogleGenerativeAI(
-        model="gemini-2.5-flash",
-        google_api_key=api_key,
-        temperature=0
+        model="gemini-2.5-flash", google_api_key=api_key, temperature=0
     )
 
     tools_list = [get_current_weather, search_local_travel_guidelines]
@@ -166,7 +168,7 @@ if api_key:
 
     user_query = st.text_input(
         "What would you like to know?",
-        placeholder="e.g., Check the weather in Paris and find out if there are any special guidelines."
+        placeholder="e.g., Check the weather in Paris and find out if there are any special guidelines.",
     )
 
     if user_query:
@@ -180,7 +182,9 @@ if api_key:
             initial_response = llm_with_tools.invoke(user_query)
 
             if initial_response.tool_calls:
-                print(f"🤖 [Model Strategy] Gemini generated tool calls: {initial_response.tool_calls}")
+                print(
+                    f"🤖 [Model Strategy] Gemini generated tool calls: {initial_response.tool_calls}"
+                )
                 conversation_history.append(initial_response)
 
                 for tool_call in initial_response.tool_calls:
@@ -197,18 +201,26 @@ if api_key:
                         tool_output = "Error: Unrecognised tool mapping structure call."
 
                     conversation_history.append(
-                        ToolMessage(content=str(tool_output), tool_call_id=tool_call["id"])
+                        ToolMessage(
+                            content=str(tool_output), tool_call_id=tool_call["id"]
+                        )
                     )
 
-                status_box.info("📝 step 3: Generating final blended summary response...")
-                print("🧠 [Processing] Submitting entire context chain history back to Gemini...")
+                status_box.info(
+                    "📝 step 3: Generating final blended summary response..."
+                )
+                print(
+                    "🧠 [Processing] Submitting entire context chain history back to Gemini..."
+                )
                 final_response = llm.invoke(conversation_history)
 
                 status_box.empty()
                 st.subheader("🤖 Response:")
                 st.write(final_response.content)
             else:
-                print("🤖 [Model Strategy] Direct text response returned without tool requirements.")
+                print(
+                    "🤖 [Model Strategy] Direct text response returned without tool requirements."
+                )
                 status_box.empty()
                 st.subheader("🤖 Response:")
                 st.write(initial_response.content)

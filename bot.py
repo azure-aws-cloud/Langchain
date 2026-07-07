@@ -33,10 +33,10 @@ COLLECTION_NAME = "gemini_knowledge_base"
 
 # --- Core RAG Dependencies ---
 
+
 def get_embeddings_model():
     return GoogleGenerativeAIEmbeddings(
-        model="models/gemini-embedding-001",
-        task_type="retrieval_document"
+        model="models/gemini-embedding-001", task_type="retrieval_document"
     )
 
 
@@ -46,7 +46,7 @@ def get_vectorstore_instance():
     return Chroma(
         client=persistent_client,
         collection_name=COLLECTION_NAME,
-        embedding_function=embeddings
+        embedding_function=embeddings,
     )
 
 
@@ -60,6 +60,7 @@ class QueryRequest(BaseModel):
 
 # --- API Endpoints ---
 
+
 @app.get("/api/status")
 async def get_status():
     """Checks if the local vector database contains indexed data."""
@@ -68,9 +69,17 @@ async def get_status():
             vector_store = get_vectorstore_instance()
             count = vector_store._collection.count()
             if count > 0:
-                return {"initialized": True, "document_count": count, "message": "Database loaded successfully."}
+                return {
+                    "initialized": True,
+                    "document_count": count,
+                    "message": "Database loaded successfully.",
+                }
         except Exception as e:
-            return {"initialized": False, "document_count": 0, "message": f"Error checking DB: {str(e)}"}
+            return {
+                "initialized": False,
+                "document_count": 0,
+                "message": f"Error checking DB: {str(e)}",
+            }
     return {"initialized": False, "document_count": 0, "message": "Database is empty."}
 
 
@@ -88,7 +97,10 @@ async def upload_document(file: UploadFile = File(...)):
         vector_store = get_vectorstore_instance()
         vector_store.add_documents(docs)
 
-        return {"status": "success", "message": f"Indexed {len(docs)} chunks from {file.filename}"}
+        return {
+            "status": "success",
+            "message": f"Indexed {len(docs)} chunks from {file.filename}",
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"File processing failed: {str(e)}")
 
@@ -99,24 +111,32 @@ async def chat_query(request: QueryRequest):
     try:
         vector_store = get_vectorstore_instance()
         if vector_store._collection.count() == 0:
-            raise HTTPException(status_code=400, detail="Database is empty. Please upload documents first.")
+            raise HTTPException(
+                status_code=400,
+                detail="Database is empty. Please upload documents first.",
+            )
 
         retriever = vector_store.as_retriever(search_kwargs={"k": 2})
         llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.1)
 
-        rag_prompt = ChatPromptTemplate.from_messages([
-            ("system", "Answer the user's question using ONLY the provided context snippets. "
-                       "If the answer cannot be confidently formulated from the context, "
-                       "respond with 'I cannot find that information in the provided source materials.'\n\n"
-                       "Context:\n{context}"),
-            ("user", "{input}")
-        ])
+        rag_prompt = ChatPromptTemplate.from_messages(
+            [
+                (
+                    "system",
+                    "Answer the user's question using ONLY the provided context snippets. "
+                    "If the answer cannot be confidently formulated from the context, "
+                    "respond with 'I cannot find that information in the provided source materials.'\n\n"
+                    "Context:\n{context}",
+                ),
+                ("user", "{input}"),
+            ]
+        )
 
         rag_chain = (
-                {"context": retriever | format_docs, "input": RunnablePassthrough()}
-                | rag_prompt
-                | llm
-                | StrOutputParser()
+            {"context": retriever | format_docs, "input": RunnablePassthrough()}
+            | rag_prompt
+            | llm
+            | StrOutputParser()
         )
 
         response = rag_chain.invoke(request.question)
@@ -136,7 +156,9 @@ async def reset_database():
             shutil.rmtree(DB_DIR)
         return {"status": "success", "message": "Database erased completely from disk."}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to reset database: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to reset database: {str(e)}"
+        )
 
 
 if __name__ == "__main__":
