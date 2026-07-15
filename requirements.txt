@@ -16,11 +16,13 @@ fastapi
 uvicorn
 streamlit
 pyjwt
-extra-streamlit-components
 tavily-python
 black
 isort
-langchain-google-vertexai
-
-
 langsmith
+langgraph>=0.1.0
+pydantic>=2.0.0
+langchain-openai
+openai
+langchain-anthropic
+langchain-voyageai

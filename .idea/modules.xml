@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Langchain.iml" filepath="$PROJECT_DIR$/.idea/Langchain.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/langchain.iml" filepath="$PROJECT_DIR$/.idea/langchain.iml" />
     </modules>
   </component>
 </project>

@@ -97,6 +97,14 @@ def health_check():
         "api_key_loaded": api_key is not None,
     }
 
+@tool
+def get_incident(incident_number:str)->str:
+    """ Get incident from the input incident number or find incident from the input incident number or search incident by input incident number
+    Example : search incident 1234455
+    Example : find incident 9889909
+    Example : get incident 098890890
+    """
+    return f"Found incident  {incident_number} successfully"
 
 @tool
 def search_plm_kb(query: str) -> str:
@@ -161,7 +169,7 @@ def handle_chat_query(request: QueryRequest):
         llm = ChatGoogleGenerativeAI(
             model="gemini-2.5-flash", google_api_key=api_key, temperature=0
         )
-        tools_list = [transfer_ownership, unlock_object, search_plm_kb]
+        tools_list = [transfer_ownership, unlock_object, search_plm_kb,get_incident]
         llm_with_tools = llm.bind_tools(tools_list)
 
         steps_taken.append("🧠 Querying Gemini model for intent...")
@@ -187,6 +195,8 @@ def handle_chat_query(request: QueryRequest):
                     tool_output = unlock_object.invoke(tool_args)
                 elif tool_name == "search_plm_kb":
                     tool_output = search_plm_kb.invoke(tool_args)
+                elif tool_name == "get_incident":
+                    tool_output = get_incident.invoke(tool_args)
                 else:
                     tool_output = "Error: Unrecognised tool mapping structure call."
 
